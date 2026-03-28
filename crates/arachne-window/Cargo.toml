@@ -1,0 +1,8 @@
+[package]
+name = "arachne-window"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+winit = "0.30"
+raw-window-handle = "0.6"

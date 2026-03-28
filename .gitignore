@@ -1,0 +1,21 @@
+# Rust build artifacts
+/target/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# WASM build output
+/web/pkg/
+
+# Development tool caches
+.attocode/
+.agent/
+.claude/
+
+# OS files
+Thumbs.db

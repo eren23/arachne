@@ -1,0 +1,26 @@
+[package]
+name = "arachne-app"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+arachne-math = { path = "../arachne-math" }
+arachne-ecs = { path = "../arachne-ecs" }
+arachne-input = { path = "../arachne-input" }
+arachne-render = { path = "../arachne-render" }
+arachne-physics = { path = "../arachne-physics" }
+arachne-audio = { path = "../arachne-audio" }
+arachne-asset = { path = "../arachne-asset" }
+arachne-particles = { path = "../arachne-particles" }
+arachne-ui = { path = "../arachne-ui" }
+arachne-window = { path = "../arachne-window", optional = true }
+winit = { version = "0.30", optional = true }
+wgpu = "24"
+bytemuck = { version = "1", features = ["derive"] }
+pollster = { version = "0.4", optional = true }
+
+[dev-dependencies]
+pollster = "0.4"
+
+[features]
+windowed = ["arachne-window", "winit", "pollster", "arachne-input/windowed"]

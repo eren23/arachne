@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arachne Engine Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #64ffda;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        #arachne-canvas {
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #000;
+            cursor: crosshair;
+        }
+
+        .controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            background: #16213e;
+            color: #64ffda;
+            border: 1px solid #64ffda;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1a3a5c;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .info {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        #status {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Arachne Engine</h1>
+    <p class="subtitle">Sub-1MB Embeddable Interactive Runtime</p>
+
+    <canvas id="arachne-canvas" width="800" height="600"></canvas>
+
+    <div class="controls">
+        <button id="btn-start">Start</button>
+        <button id="btn-stop" disabled>Stop</button>
+        <button id="btn-spawn">Spawn Entity</button>
+        <button id="btn-fullscreen">Fullscreen</button>
+    </div>
+
+    <div id="status">Status: idle | Entities: 0 | FPS: --</div>
+
+    <div class="info">
+        <p>
+            Click <strong>Start</strong> to begin the runtime loop.
+            <strong>Spawn Entity</strong> adds objects to the scene.
+            Use WASD / arrow keys to interact.
+        </p>
+    </div>
+
+    <script type="module">
+        // This module will import the WASM build of arachne-wasm once compiled.
+        // For now, it demonstrates the intended JS API.
+
+        // import init, { ArachneApp } from './pkg/arachne_wasm.js';
+
+        const canvas = document.getElementById('arachne-canvas');
+        const statusEl = document.getElementById('status');
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const btnSpawn = document.getElementById('btn-spawn');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+
+        let app = null;
+        let entityCount = 0;
+        let running = false;
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+        let fps = 0;
+
+        function updateStatus() {
+            statusEl.textContent =
+                `Status: ${running ? 'running' : 'idle'} | Entities: ${entityCount} | FPS: ${fps}`;
+        }
+
+        // Placeholder main loop until WASM is built.
+        function frame(time) {
+            if (!running) return;
+
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
+                updateStatus();
+            }
+
+            // Clear canvas with a dark background.
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.fillStyle = '#0a0a1a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#64ffda';
+                ctx.font = '14px monospace';
+                ctx.fillText(`Arachne Engine - ${entityCount} entities`, 20, 30);
+                ctx.fillText(`Frame: ${frameCount} | FPS: ${fps}`, 20, 50);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        btnStart.addEventListener('click', () => {
+            if (running) return;
+            running = true;
+            btnStart.disabled = true;
+            btnStop.disabled = false;
+            requestAnimationFrame(frame);
+            updateStatus();
+        });
+
+        btnStop.addEventListener('click', () => {
+            running = false;
+            btnStart.disabled = false;
+            btnStop.disabled = true;
+            updateStatus();
+        });
+
+        btnSpawn.addEventListener('click', () => {
+            entityCount++;
+            updateStatus();
+        });
+
+        btnFullscreen.addEventListener('click', () => {
+            if (canvas.requestFullscreen) {
+                canvas.requestFullscreen();
+            }
+        });
+
+        updateStatus();
+
+        // When WASM is ready, the startup would look like:
+        //
+        // async function main() {
+        //     await init();
+        //     app = new ArachneApp('#arachne-canvas', {
+        //         width: 800,
+        //         height: 600,
+        //         highDpi: true,
+        //         audio: true,
+        //     });
+        //     app.onUpdate((dt) => {
+        //         // Per-frame logic
+        //     });
+        //     app.start();
+        // }
+        // main().catch(console.error);
+    </script>
+</body>
+</html>

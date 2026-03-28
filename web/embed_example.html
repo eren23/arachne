@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Arachne - Minimal Embed</title>
+</head>
+<body>
+    <!--
+        Arachne: Embed an interactive runtime in your web page with a single
+        <script> tag and a <canvas> element. No build tools required.
+
+        This is the "embed in a blog post" use case.
+    -->
+
+    <h2>My Blog Post</h2>
+    <p>Here is an interactive simulation powered by Arachne:</p>
+
+    <!-- Step 1: Add a canvas -->
+    <canvas id="arachne-canvas" width="640" height="480"
+            style="border: 1px solid #ccc; display: block; margin: 1rem 0;"></canvas>
+
+    <!-- Step 2: Load Arachne (single script tag) -->
+    <!-- <script src="https://cdn.example.com/arachne/arachne.js"></script> -->
+
+    <!-- Step 3: Initialize -->
+    <script type="module">
+        // Once the WASM module is built and published, embedding is this simple:
+        //
+        // import init, { ArachneApp } from 'https://cdn.example.com/arachne/arachne.js';
+        //
+        // async function main() {
+        //     await init();
+        //
+        //     const app = new ArachneApp('#arachne-canvas', {
+        //         width: 640,
+        //         height: 480,
+        //     });
+        //
+        //     // Load a pre-built scene
+        //     await app.loadScene('https://cdn.example.com/scenes/demo.json');
+        //
+        //     // Or build programmatically
+        //     app.spawn({ position: [0, 0, 0], sprite: 'player.png' });
+        //     app.spawn({ position: [3, 0, 0], sprite: 'enemy.png' });
+        //
+        //     app.onUpdate((dt) => {
+        //         // Custom per-frame logic
+        //     });
+        //
+        //     app.start();
+        // }
+        //
+        // main();
+
+        // --- Placeholder demo until WASM is compiled ---
+        const canvas = document.getElementById('arachne-canvas');
+        const ctx = canvas.getContext('2d');
+
+        if (ctx) {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#333';
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(
+                'Arachne Runtime (build WASM to activate)',
+                canvas.width / 2,
+                canvas.height / 2 - 10
+            );
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#888';
+            ctx.fillText(
+                'Run web/build.sh to compile the engine',
+                canvas.width / 2,
+                canvas.height / 2 + 15
+            );
+        }
+    </script>
+
+    <p>The entire runtime is under 1MB. No build tools required for consumers.</p>
+</body>
+</html>

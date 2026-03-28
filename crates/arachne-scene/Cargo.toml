@@ -1,0 +1,10 @@
+[package]
+name = "arachne-scene"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+arachne-math = { path = "../arachne-math" }
+arachne-ecs = { path = "../arachne-ecs" }
+
+[dev-dependencies]

@@ -1,0 +1,13 @@
+[package]
+name = "arachne-asset"
+version = "0.1.0"
+edition.workspace = true
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+png = "0.17"
+
+[dev-dependencies]

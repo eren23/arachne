@@ -1,0 +1,20 @@
+[package]
+name = "arachne-particles"
+version = "0.1.0"
+edition.workspace = true
+
+[features]
+default = ["std"]
+std = []
+gpu = []
+
+[dependencies]
+arachne-math = { path = "../arachne-math" }
+arachne-render = { path = "../arachne-render" }
+wgpu = "24"
+bytemuck = { version = "1", features = ["derive"] }
+log = "0.4"
+
+[dev-dependencies]
+pollster = "0.4"
+env_logger = "0.11"

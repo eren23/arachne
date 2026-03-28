@@ -1,0 +1,10 @@
+[package]
+name = "arachne-ecs"
+version = "0.1.0"
+edition.workspace = true
+
+[features]
+default = ["std"]
+std = []
+
+[dev-dependencies]

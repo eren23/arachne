@@ -1,0 +1,36 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/arachne-math",
+    "crates/arachne-ecs",
+    "crates/arachne-input",
+    "crates/arachne-render",
+    "crates/arachne-physics",
+    "crates/arachne-audio",
+    "crates/arachne-asset",
+    "crates/arachne-particles",
+    "crates/arachne-ui",
+    "crates/arachne-scene",
+    "crates/arachne-animation",
+    "crates/arachne-app",
+    "crates/arachne-networking",
+    "crates/arachne-wasm",
+    "crates/arachne-window",
+    "examples",
+]
+
+[workspace.package]
+edition = "2021"
+
+# Optimized test builds for benchmark thresholds.
+[profile.test]
+opt-level = 2
+
+[profile.release]
+lto = true
+
+[profile.release.package."*"]
+opt-level = "z"
+
+[profile.release.build-override]
+opt-level = "z"

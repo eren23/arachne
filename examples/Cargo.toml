@@ -1,0 +1,102 @@
+[package]
+name = "arachne-examples"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+arachne-app = { path = "../crates/arachne-app" }
+arachne-math = { path = "../crates/arachne-math" }
+arachne-ecs = { path = "../crates/arachne-ecs" }
+arachne-input = { path = "../crates/arachne-input" }
+arachne-render = { path = "../crates/arachne-render" }
+arachne-physics = { path = "../crates/arachne-physics" }
+arachne-audio = { path = "../crates/arachne-audio" }
+arachne-asset = { path = "../crates/arachne-asset" }
+arachne-particles = { path = "../crates/arachne-particles" }
+arachne-ui = { path = "../crates/arachne-ui" }
+arachne-scene = { path = "../crates/arachne-scene" }
+arachne-animation = { path = "../crates/arachne-animation" }
+arachne-networking = { path = "../crates/arachne-networking" }
+arachne-window = { path = "../crates/arachne-window", optional = true }
+pollster = "0.4"
+
+[features]
+windowed = ["arachne-app/windowed", "arachne-audio/native-audio", "arachne-input/windowed", "arachne-window"]
+
+# Empty lib to host examples
+[lib]
+name = "arachne_examples"
+path = "lib.rs"
+
+[[example]]
+name = "hello_triangle"
+path = "hello_triangle/main.rs"
+
+[[example]]
+name = "sprite_demo"
+path = "sprite_demo/main.rs"
+
+[[example]]
+name = "physics_playground"
+path = "physics_playground/main.rs"
+
+[[example]]
+name = "particle_fireworks"
+path = "particle_fireworks/main.rs"
+
+[[example]]
+name = "product_configurator"
+path = "product_configurator/main.rs"
+
+[[example]]
+name = "platformer"
+path = "platformer/main.rs"
+
+[[example]]
+name = "multiplayer_pong"
+path = "multiplayer_pong/main.rs"
+
+[[example]]
+name = "eren_game"
+path = "eren_game/main.rs"
+
+# ---------------------------------------------------------------------------
+# Integration tests
+# ---------------------------------------------------------------------------
+
+[[test]]
+name = "full_app_lifecycle"
+path = "../tests/integration/full_app_lifecycle.rs"
+
+[[test]]
+name = "ecs_stress"
+path = "../tests/integration/ecs_stress.rs"
+
+[[test]]
+name = "physics_determinism"
+path = "../tests/integration/physics_determinism.rs"
+
+[[test]]
+name = "scene_roundtrip"
+path = "../tests/integration/scene_roundtrip.rs"
+
+# ---------------------------------------------------------------------------
+# Benchmarks
+# ---------------------------------------------------------------------------
+
+[[test]]
+name = "math_bench"
+path = "../tests/benchmarks/math_bench.rs"
+
+[[test]]
+name = "ecs_bench"
+path = "../tests/benchmarks/ecs_bench.rs"
+
+[[test]]
+name = "physics_bench"
+path = "../tests/benchmarks/physics_bench.rs"
+
+[[test]]
+name = "render_bench"
+path = "../tests/benchmarks/render_bench.rs"
