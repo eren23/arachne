@@ -398,17 +398,9 @@ pub fn translate_touch_phase(phase: DomTouchPhase) -> TouchPhase {
 pub fn register_dom_listeners(_canvas_selector: &str) -> Result<(), String> {
     #[cfg(all(target_arch = "wasm32", feature = "wasm"))]
     {
-        // Real WASM implementation would use web_sys and wasm_bindgen::closure
-        // to attach event listeners to the canvas and window.
-        //
-        // Example pseudocode:
-        //   let document = web_sys::window().unwrap().document().unwrap();
-        //   let canvas = document.query_selector(selector).unwrap().unwrap();
-        //   let closure = Closure::wrap(Box::new(move |event: KeyboardEvent| {
-        //       // translate and queue event
-        //   }) as Box<dyn FnMut(KeyboardEvent)>);
-        //   canvas.add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
-        //   closure.forget();
+        // Event listeners are now registered via setup_event_listeners() in
+        // canvas_runtime.rs which uses the shared event queue pattern.
+        // This function is kept as a lifecycle hook for the ArachneApp API.
     }
 
     Ok(())

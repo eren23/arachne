@@ -30,7 +30,7 @@ fn main() {
     use arachne_app::{
         App, AppExit, Camera, Commands, DefaultPlugins, Res, ResMut, Query,
         Transform, Vec2, Vec3, Color, WindowedRunner, PhysicsBody,
-        PhysicsBodyState, Physics2dPlugin,
+        PhysicsBodyState, Physics2dPlugin, ScreenTextBuffer, Time,
     };
     use arachne_input::{InputSystem, KeyCode, MouseButton};
     use arachne_math::Rng;
@@ -38,10 +38,12 @@ fn main() {
     use arachne_render::{Camera2d, Sprite, TextureHandle};
     use arachne_window::WindowConfig;
 
-    /// Tracks the spawn counter and provides deterministic randomness.
+    /// Tracks the spawn counter, drag state, and provides deterministic randomness.
     struct PlaygroundState {
         rng: Rng,
         spawn_count: u32,
+        /// Mouse position at drag start (world coords), or None if not dragging.
+        drag_start: Option<Vec2>,
     }
 
     // SAFETY: Only accessed via ResMut in a single-threaded schedule.
@@ -53,6 +55,7 @@ fn main() {
             Self {
                 rng: Rng::seed(1234),
                 spawn_count: 0,
+                drag_start: None,
             }
         }
     }
@@ -79,7 +82,8 @@ fn main() {
             let body = RigidBodyData::new_dynamic(Vec2::new(x, y), 1.0, 1.0);
             let handle = physics.add_body(body);
 
-            if i % 2 == 0 {
+            let is_circle = i % 2 == 0;
+            if is_circle {
                 physics.set_collider(handle, Collider::circle(radius));
             } else {
                 physics.set_collider(handle, Collider::aabb(Vec2::new(radius, radius)));
@@ -88,11 +92,13 @@ fn main() {
             let mut pb = PhysicsBody::dynamic(1.0, 1.0);
             pb.state = PhysicsBodyState::Active(handle);
 
-            // Colorful rainbow bodies.
+            // Colorful rainbow bodies with real textures.
             let hue = (i as f32 / 15.0) * 360.0;
             let (r, g, b) = hsv_to_rgb(hue, 0.7, 1.0);
 
-            let mut sprite = Sprite::new(TextureHandle(0));
+            // TextureHandle(3) = circle.png, TextureHandle(4) = box.png
+            let tex = if is_circle { TextureHandle(3) } else { TextureHandle(4) };
+            let mut sprite = Sprite::new(tex);
             sprite.color = Color::rgb(r, g, b);
             sprite.custom_size = Some(Vec2::new(radius * 2.0, radius * 2.0));
 
@@ -149,54 +155,68 @@ fn main() {
         }
     }
 
-    /// Spawn a physics body when left mouse button is clicked.
-    fn spawn_on_click(
+    /// Click-drag to spawn and throw physics bodies.
+    /// Mouse down records start position, mouse up spawns with velocity from drag.
+    fn spawn_on_click_drag(
         input: Res<InputSystem>,
         cam: Res<Camera2d>,
         mut physics: ResMut<PhysicsWorld>,
         mut state: ResMut<PlaygroundState>,
         mut commands: Commands,
     ) {
-        if !input.mouse.just_pressed(MouseButton::Left) {
-            return;
-        }
-
         let mouse_screen = Vec2::new(input.mouse.position().x, input.mouse.position().y);
         let world_pos = cam.screen_to_world(mouse_screen);
 
-        let is_circle = state.spawn_count % 2 == 0;
-        let mass = 1.0;
-        let inertia = 1.0;
+        // Record drag start on mouse down.
+        if input.mouse.just_pressed(MouseButton::Left) {
+            state.drag_start = Some(world_pos);
+        }
 
-        let body = RigidBodyData::new_dynamic(world_pos, mass, inertia);
-        let handle = physics.add_body(body);
+        // Spawn with velocity on mouse up.
+        if input.mouse.just_released(MouseButton::Left) {
+            let start = state.drag_start.take().unwrap_or(world_pos);
 
-        let radius = if is_circle {
-            let r = state.rng.next_range_f32(0.5, 1.5) * 15.0;
-            physics.set_collider(handle, Collider::circle(r));
-            r
-        } else {
-            let hw = state.rng.next_range_f32(0.5, 1.5) * 15.0;
-            let hh = state.rng.next_range_f32(0.5, 1.5) * 15.0;
-            physics.set_collider(handle, Collider::aabb(Vec2::new(hw, hh)));
-            hw.max(hh)
-        };
+            // Velocity = drag vector scaled by a throw factor.
+            let drag = Vec2::new(world_pos.x - start.x, world_pos.y - start.y);
+            let velocity = Vec2::new(drag.x * 3.0, drag.y * 3.0);
 
-        let mut pb = PhysicsBody::dynamic(mass, inertia);
-        pb.state = PhysicsBodyState::Active(handle);
+            let is_circle = state.spawn_count % 2 == 0;
+            let mass = 1.0;
+            let inertia = 1.0;
 
-        let mut sprite = Sprite::new(TextureHandle(0));
-        sprite.color = Color::rgb(0.5, 0.5, 1.0);
-        sprite.custom_size = Some(Vec2::new(radius * 2.0, radius * 2.0));
+            let mut body = RigidBodyData::new_dynamic(start, mass, inertia);
+            body.linear_velocity = velocity;
+            let handle = physics.add_body(body);
 
-        commands.spawn((
-            DynamicBody,
-            pb,
-            sprite,
-            Transform::from_position(Vec3::new(world_pos.x, world_pos.y, 0.1)),
-        ));
+            let radius = if is_circle {
+                let r = state.rng.next_range_f32(0.5, 1.5) * 15.0;
+                physics.set_collider(handle, Collider::circle(r));
+                r
+            } else {
+                let hw = state.rng.next_range_f32(0.5, 1.5) * 15.0;
+                let hh = state.rng.next_range_f32(0.5, 1.5) * 15.0;
+                physics.set_collider(handle, Collider::aabb(Vec2::new(hw, hh)));
+                hw.max(hh)
+            };
 
-        state.spawn_count += 1;
+            let mut pb = PhysicsBody::dynamic(mass, inertia);
+            pb.state = PhysicsBodyState::Active(handle);
+
+            // TextureHandle(3) = circle.png, TextureHandle(4) = box.png
+            let tex = if is_circle { TextureHandle(3) } else { TextureHandle(4) };
+            let mut sprite = Sprite::new(tex);
+            sprite.color = Color::rgb(0.5, 0.5, 1.0);
+            sprite.custom_size = Some(Vec2::new(radius * 2.0, radius * 2.0));
+
+            commands.spawn((
+                DynamicBody,
+                pb,
+                sprite,
+                Transform::from_position(Vec3::new(start.x, start.y, 0.1)),
+            ));
+
+            state.spawn_count += 1;
+        }
     }
 
     /// Color dynamic bodies by their velocity magnitude.
@@ -208,9 +228,11 @@ fn main() {
             if let PhysicsBodyState::Active(handle) = pb.state {
                 if let Some(body) = physics.bodies.get(handle.0 as usize) {
                     let speed = body.linear_velocity.length();
-                    // Map speed 0..10+ to blue..red.
-                    let t = (speed / 10.0).min(1.0);
-                    sprite.color = Color::rgb(t, 0.2, 1.0 - t);
+                    // Map speed 0..500 to blue(240)..red(0) via HSV.
+                    let t = (speed / 500.0).min(1.0);
+                    let hue = 240.0 * (1.0 - t); // blue → cyan → green → yellow → red
+                    let (r, g, b) = hsv_to_rgb(hue, 0.8, 1.0);
+                    sprite.color = Color::rgb(r, g, b);
                 }
             }
         }
@@ -227,6 +249,35 @@ fn main() {
             // continuing to run on the remaining entities. Full despawn
             // would require entity tracking which is beyond this demo.
         }
+    }
+
+    /// Display FPS, body count, and instructions as screen text.
+    fn ui_overlay(
+        time: Res<Time>,
+        physics: Res<PhysicsWorld>,
+        mut text_buf: ResMut<ScreenTextBuffer>,
+    ) {
+        let fps = if time.delta_seconds() > 0.0 { 1.0 / time.delta_seconds() } else { 0.0 };
+        let body_count = physics.bodies.len();
+
+        text_buf.draw(
+            format!("FPS: {:.0}", fps),
+            Vec2::new(10.0, 10.0),
+            16.0,
+            Color::rgb(0.4, 1.0, 0.85),
+        );
+        text_buf.draw(
+            format!("Bodies: {}", body_count),
+            Vec2::new(10.0, 30.0),
+            16.0,
+            Color::rgb(0.4, 1.0, 0.85),
+        );
+        text_buf.draw(
+            "Click-drag to throw | R = reset | Esc = exit",
+            Vec2::new(10.0, 50.0),
+            12.0,
+            Color::rgb(0.5, 0.5, 0.6),
+        );
     }
 
     /// Escape key exits the application.
@@ -247,8 +298,9 @@ fn main() {
     app.add_startup_system(setup);
     app.add_startup_system(setup_walls);
     app.add_startup_system(spawn_initial_bodies);
-    app.add_system(spawn_on_click);
+    app.add_system(spawn_on_click_drag);
     app.add_system(color_by_velocity);
+    app.add_system(ui_overlay);
     app.add_system(reset_system);
     app.add_system(escape_to_exit);
     app.run();

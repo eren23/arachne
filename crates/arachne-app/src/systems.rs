@@ -165,6 +165,18 @@ impl TextureStorageResource {
         Ok(self.0.create_texture(device, queue, img.width, img.height, &img.data))
     }
 
+    /// Load a PNG from raw bytes and register it as a GPU texture.
+    /// Useful for WASM where textures are fetched as byte arrays.
+    pub fn load_png_bytes(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        bytes: &[u8],
+    ) -> Result<arachne_render::TextureHandle, String> {
+        let img = arachne_asset::Image::decode_png(bytes)?;
+        Ok(self.0.create_texture(device, queue, img.width, img.height, &img.data))
+    }
+
     /// Create a procedural texture from RGBA8 data.
     pub fn create_from_rgba(
         &mut self,

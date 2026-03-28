@@ -8,7 +8,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-wasm = ["wasm-bindgen"]
+wasm = ["wasm-bindgen", "web-sys", "js-sys", "wasm-bindgen-futures"]
 
 [dependencies]
 arachne-math = { path = "../arachne-math" }
@@ -17,6 +17,33 @@ arachne-input = { path = "../arachne-input" }
 arachne-audio = { path = "../arachne-audio" }
 arachne-asset = { path = "../arachne-asset" }
 arachne-app = { path = "../arachne-app" }
+arachne-physics = { path = "../arachne-physics" }
+arachne-render = { path = "../arachne-render" }
+wgpu = "24"
+bytemuck = { version = "1", features = ["derive"] }
 wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+js-sys = { version = "0.3", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+optional = true
+features = [
+    "Window",
+    "Document",
+    "HtmlCanvasElement",
+    "Element",
+    "EventTarget",
+    "KeyboardEvent",
+    "MouseEvent",
+    "WheelEvent",
+    "TouchEvent",
+    "Touch",
+    "TouchList",
+    "console",
+    "Performance",
+    "AddEventListenerOptions",
+    "GpuCanvasContext",
+]
 
 [dev-dependencies]

@@ -12,6 +12,9 @@ use arachne_audio::AudioBackend;
 use arachne_ecs::Entity;
 use arachne_math::{Transform, Vec3};
 
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+use wasm_bindgen::prelude::*;
+
 use crate::canvas::{CanvasConfig, CanvasHandle};
 use crate::events::EventTranslator;
 use crate::audio_backend::WebAudioBackend;
@@ -23,6 +26,7 @@ use crate::fetch::AssetFetcher;
 
 /// The lifecycle state of an ArachneApp.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(all(target_arch = "wasm32", feature = "wasm"), wasm_bindgen)]
 pub enum AppState {
     /// Created but not started.
     Idle,
@@ -94,12 +98,12 @@ type UpdateCallback = Box<dyn FnMut(f64)>;
 /// ```js
 /// const app = new ArachneApp("#canvas", { width: 800, height: 600 });
 /// const entityId = app.spawn({ position: [1, 2, 3] });
-/// app.onUpdate((dt) => { /* per-frame logic */ });
+/// app.onUpdate((dt) => { });
 /// app.start();
-/// // ...later:
 /// app.despawn(entityId);
 /// app.stop();
 /// ```
+#[cfg_attr(all(target_arch = "wasm32", feature = "wasm"), wasm_bindgen)]
 pub struct ArachneApp {
     /// The underlying Arachne engine app.
     app: App,
@@ -385,6 +389,89 @@ impl ArachneApp {
     /// Get the CSS selector for this app's canvas.
     pub fn selector(&self) -> &str {
         &self.selector
+    }
+}
+
+// ---------------------------------------------------------------------------
+// WASM-specific JS API methods
+// ---------------------------------------------------------------------------
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen]
+impl ArachneApp {
+    /// Create a new ArachneApp targeting the given canvas selector.
+    ///
+    /// JS: `const app = new ArachneApp("#my-canvas");`
+    #[wasm_bindgen(constructor)]
+    pub fn js_new(canvas_selector: &str) -> Self {
+        Self::new(canvas_selector, ArachneAppOptions::default())
+    }
+
+    /// Create with custom dimensions.
+    ///
+    /// JS: `const app = ArachneApp.withSize("#canvas", 1024, 768);`
+    #[wasm_bindgen(js_name = "withSize")]
+    pub fn js_with_size(canvas_selector: &str, width: u32, height: u32) -> Self {
+        let opts = ArachneAppOptions {
+            width,
+            height,
+            ..ArachneAppOptions::default()
+        };
+        Self::new(canvas_selector, opts)
+    }
+
+    /// Start the application main loop.
+    #[wasm_bindgen(js_name = "start")]
+    pub fn js_start(&mut self) {
+        self.start();
+    }
+
+    /// Stop the application.
+    #[wasm_bindgen(js_name = "stop")]
+    pub fn js_stop(&mut self) {
+        self.stop();
+    }
+
+    /// Get the current lifecycle state as a string.
+    #[wasm_bindgen(js_name = "getState")]
+    pub fn js_state(&self) -> AppState {
+        self.state()
+    }
+
+    /// Whether the app is currently running.
+    #[wasm_bindgen(js_name = "isRunning")]
+    pub fn js_is_running(&self) -> bool {
+        self.is_running()
+    }
+
+    /// Spawn a new entity with a default transform. Returns entity ID.
+    #[wasm_bindgen(js_name = "spawnDefault")]
+    pub fn js_spawn_default(&mut self) -> u64 {
+        self.spawn_default()
+    }
+
+    /// Spawn a new entity at the given position. Returns entity ID.
+    #[wasm_bindgen(js_name = "spawnAt")]
+    pub fn js_spawn_at(&mut self, x: f32, y: f32, z: f32) -> u64 {
+        self.spawn_at(x, y, z)
+    }
+
+    /// Despawn an entity by its ID. Returns true if it existed.
+    #[wasm_bindgen(js_name = "despawn")]
+    pub fn js_despawn(&mut self, entity_id: u64) -> bool {
+        self.despawn(entity_id)
+    }
+
+    /// Get the number of entities.
+    #[wasm_bindgen(js_name = "entityCount")]
+    pub fn js_entity_count(&self) -> usize {
+        self.entity_count()
+    }
+
+    /// Resize the canvas.
+    #[wasm_bindgen(js_name = "resize")]
+    pub fn js_resize(&mut self, width: u32, height: u32) {
+        self.resize(width, height);
     }
 }
 

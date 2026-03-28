@@ -58,7 +58,7 @@ wasm-bindgen \
     "$WASM_FILE" \
     --out-dir "$OUT_DIR" \
     --target web \
-    --no-typescript || {
+    --typescript || {
         echo "WARNING: wasm-bindgen failed. Install with: cargo install wasm-bindgen-cli"
         echo "Copying raw WASM file instead."
         cp "$WASM_FILE" "$OUT_DIR/arachne_wasm_bg.wasm"

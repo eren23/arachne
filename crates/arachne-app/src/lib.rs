@@ -2,6 +2,7 @@ pub mod app;
 pub mod components;
 pub mod default_plugins;
 pub mod diagnostic;
+pub mod gpu_init;
 pub mod plugin;
 pub mod runner;
 pub mod systems;
@@ -17,8 +18,12 @@ pub use plugin::{
     UIPlugin,
 };
 pub use runner::{AppExit, HeadlessRunner, NativeRunner, Runner};
+pub use gpu_init::{
+    init_gpu_resources, GpuResources, RenderContextResource, SpritePipelineResource,
+    TilemapPipelineResource,
+};
 #[cfg(feature = "windowed")]
-pub use runner::{RenderContextResource, SpritePipelineResource, TilemapPipelineResource, WindowedRunner};
+pub use runner::WindowedRunner;
 pub use systems::{ScreenTextBuffer, TextRendererResource, TilemapRendererResource, TextureStorageResource};
 pub use time::{Stopwatch, Time, Timer};
 

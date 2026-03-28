@@ -294,7 +294,14 @@ dependencies = [
  "arachne-ecs",
  "arachne-input",
  "arachne-math",
+ "arachne-physics",
+ "arachne-render",
+ "bytemuck",
+ "js-sys",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "wgpu",
 ]
 
 [[package]]

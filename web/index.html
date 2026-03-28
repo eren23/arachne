@@ -80,6 +80,17 @@
             font-size: 0.85rem;
             color: #aaa;
         }
+
+        #error {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #2a1a1a;
+            border: 1px solid #ff4444;
+            border-radius: 4px;
+            color: #ff6666;
+            display: none;
+            max-width: 600px;
+        }
     </style>
 </head>
 <body>
@@ -89,120 +100,66 @@
     <canvas id="arachne-canvas" width="800" height="600"></canvas>
 
     <div class="controls">
-        <button id="btn-start">Start</button>
-        <button id="btn-stop" disabled>Stop</button>
         <button id="btn-spawn">Spawn Entity</button>
         <button id="btn-fullscreen">Fullscreen</button>
     </div>
 
-    <div id="status">Status: idle | Entities: 0 | FPS: --</div>
+    <div id="status">Status: loading...</div>
+    <div id="error"></div>
 
     <div class="info">
         <p>
-            Click <strong>Start</strong> to begin the runtime loop.
-            <strong>Spawn Entity</strong> adds objects to the scene.
-            Use WASD / arrow keys to interact.
+            Click <strong>Spawn Entity</strong> to add objects.
+            Use WASD / arrow keys to interact. Click canvas to spawn physics bodies.
         </p>
     </div>
 
     <script type="module">
-        // This module will import the WASM build of arachne-wasm once compiled.
-        // For now, it demonstrates the intended JS API.
-
-        // import init, { ArachneApp } from './pkg/arachne_wasm.js';
+        import init, { run } from './pkg/arachne_wasm.js';
 
         const canvas = document.getElementById('arachne-canvas');
         const statusEl = document.getElementById('status');
-        const btnStart = document.getElementById('btn-start');
-        const btnStop = document.getElementById('btn-stop');
-        const btnSpawn = document.getElementById('btn-spawn');
+        const errorEl = document.getElementById('error');
         const btnFullscreen = document.getElementById('btn-fullscreen');
 
-        let app = null;
-        let entityCount = 0;
-        let running = false;
-        let frameCount = 0;
-        let lastFpsTime = performance.now();
-        let fps = 0;
-
-        function updateStatus() {
-            statusEl.textContent =
-                `Status: ${running ? 'running' : 'idle'} | Entities: ${entityCount} | FPS: ${fps}`;
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+            statusEl.textContent = 'Status: error';
         }
 
-        // Placeholder main loop until WASM is built.
-        function frame(time) {
-            if (!running) return;
+        // Check for WebGPU support.
+        if (!navigator.gpu) {
+            showError(
+                'WebGPU is not supported in this browser. ' +
+                'Please use Chrome 113+, Edge 113+, or Safari 18+.'
+            );
+        } else {
+            async function main() {
+                statusEl.textContent = 'Status: loading WASM...';
+                await init();
 
-            frameCount++;
-            const now = performance.now();
-            if (now - lastFpsTime >= 1000) {
-                fps = frameCount;
-                frameCount = 0;
-                lastFpsTime = now;
-                updateStatus();
+                statusEl.textContent = 'Status: initializing engine...';
+
+                // Boot the full engine with GPU rendering on the canvas.
+                // This creates the App, WasmRunner, WebGPU surface, and
+                // enters the requestAnimationFrame loop.
+                run('arachne-canvas');
+
+                statusEl.textContent = 'Status: running';
+
+                btnFullscreen.addEventListener('click', () => {
+                    if (canvas.requestFullscreen) {
+                        canvas.requestFullscreen();
+                    }
+                });
             }
 
-            // Clear canvas with a dark background.
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                ctx.fillStyle = '#0a0a1a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#64ffda';
-                ctx.font = '14px monospace';
-                ctx.fillText(`Arachne Engine - ${entityCount} entities`, 20, 30);
-                ctx.fillText(`Frame: ${frameCount} | FPS: ${fps}`, 20, 50);
-            }
-
-            requestAnimationFrame(frame);
+            main().catch((err) => {
+                console.error(err);
+                showError(`Failed to start: ${err.message || err}`);
+            });
         }
-
-        btnStart.addEventListener('click', () => {
-            if (running) return;
-            running = true;
-            btnStart.disabled = true;
-            btnStop.disabled = false;
-            requestAnimationFrame(frame);
-            updateStatus();
-        });
-
-        btnStop.addEventListener('click', () => {
-            running = false;
-            btnStart.disabled = false;
-            btnStop.disabled = true;
-            updateStatus();
-        });
-
-        btnSpawn.addEventListener('click', () => {
-            entityCount++;
-            updateStatus();
-        });
-
-        btnFullscreen.addEventListener('click', () => {
-            if (canvas.requestFullscreen) {
-                canvas.requestFullscreen();
-            }
-        });
-
-        updateStatus();
-
-        // When WASM is ready, the startup would look like:
-        //
-        // async function main() {
-        //     await init();
-        //     app = new ArachneApp('#arachne-canvas', {
-        //         width: 800,
-        //         height: 600,
-        //         highDpi: true,
-        //         audio: true,
-        //     });
-        //     app.onUpdate((dt) => {
-        //         // Per-frame logic
-        //     });
-        //     app.start();
-        // }
-        // main().catch(console.error);
     </script>
 </body>
 </html>
