@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Arachne Playable Ad - Catch</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+  #ad-container { width: 100%; height: 100%; max-width: 480px; max-height: 720px; position: relative; }
+  #arachne-canvas {
+    display: block; width: 100%; height: 100%;
+    touch-action: none; -webkit-touch-callout: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div id="ad-container">
+  <canvas id="arachne-canvas" width="480" height="720"></canvas>
+</div>
+
+<script src="../mraid-shim.js"></script>
+<script src="../arachne-playable.js"></script>
+
+<script type="module">
+  import init, { run_catch } from '../../pkg/arachne_wasm.js';
+
+  const ad = new ArachnePlayable({
+    container: '#ad-container',
+    canvasId: 'arachne-canvas',
+    width: 480,
+    height: 720,
+    storeUrl: 'https://apps.apple.com/example',
+    ctaText: 'Beat the High Score!',
+    endCardDelay: 20,
+    maxInteractions: 15,
+    onStart: () => console.log('[ad] started'),
+    onInteract: (n) => console.log('[ad] tap', n),
+    onCTA: () => console.log('[ad] CTA clicked'),
+    onComplete: () => console.log('[ad] complete'),
+  });
+
+  ad.start(async (canvasId) => {
+    await init();
+    run_catch(canvasId);
+  });
+</script>
+</body>
+</html>

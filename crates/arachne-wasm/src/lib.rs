@@ -201,6 +201,183 @@ pub fn run(canvas_id: &str) {
 #[cfg(not(all(target_arch = "wasm32", feature = "wasm")))]
 pub fn run(_canvas_id: &str) {}
 
+/// Catch game: tap falling objects to score points.
+/// Entry point for the "catch-game" playable ad template.
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn run_catch(canvas_id: &str) {
+    use arachne_app::{
+        App, Camera, Commands, DefaultPlugins, PhysicsBody, PhysicsBodyState,
+        Physics2dPlugin, Query, Res, ResMut, Runner, ScreenTextBuffer,
+        Time, Transform, Vec2, Vec3, Color, Entity,
+    };
+    use arachne_input::{InputSystem, MouseButton};
+    use arachne_math::Rng;
+    use arachne_physics::{Collider, PhysicsWorld, RigidBodyData};
+    use arachne_render::{Camera2d, Sprite, TextureHandle};
+
+    #[derive(Clone, Copy)]
+    struct FallingItem;
+
+    struct CatchState {
+        rng: Rng,
+        score: u32,
+        spawn_timer: f32,
+        spawn_interval: f32,
+        elapsed: f32,
+    }
+    unsafe impl Send for CatchState {}
+    unsafe impl Sync for CatchState {}
+
+    fn setup(mut commands: Commands) {
+        commands.spawn((Camera::new(), Transform::IDENTITY));
+        commands.insert_resource(CatchState {
+            rng: Rng::seed(42),
+            score: 0,
+            spawn_timer: 0.0,
+            spawn_interval: 1.0,
+            elapsed: 0.0,
+        });
+    }
+
+    fn setup_walls(mut physics: ResMut<PhysicsWorld>, _commands: Commands) {
+        let body = RigidBodyData::new_static(Vec2::new(0.0, 260.0));
+        let h = physics.add_body(body);
+        physics.set_collider(h, Collider::aabb(Vec2::new(200.0, 10.0)));
+        for x in [-170.0f32, 170.0] {
+            let body = RigidBodyData::new_static(Vec2::new(x, 0.0));
+            let h = physics.add_body(body);
+            physics.set_collider(h, Collider::aabb(Vec2::new(10.0, 300.0)));
+        }
+    }
+
+    fn spawn_falling(
+        time: Res<Time>,
+        mut physics: ResMut<PhysicsWorld>,
+        mut st: ResMut<CatchState>,
+        mut commands: Commands,
+    ) {
+        st.elapsed += time.delta_seconds();
+        st.spawn_timer += time.delta_seconds();
+        st.spawn_interval = (1.0 - st.elapsed * 0.02).max(0.3);
+
+        if st.spawn_timer >= st.spawn_interval {
+            st.spawn_timer = 0.0;
+            let x = st.rng.next_range_f32(-140.0, 140.0);
+            let r = st.rng.next_range_f32(12.0, 20.0);
+
+            let body = RigidBodyData::new_dynamic(Vec2::new(x, -260.0), 1.0, 1.0);
+            let h = physics.add_body(body);
+            physics.set_collider(h, Collider::circle(r));
+
+            let mut pb = PhysicsBody::dynamic(1.0, 1.0);
+            pb.state = PhysicsBodyState::Active(h);
+
+            let hues = [0.0, 30.0, 60.0, 120.0, 200.0, 280.0, 320.0];
+            let hue = hues[st.rng.next_u64() as usize % hues.len()];
+            let (cr, cg, cb) = match hue as u32 / 60 {
+                0 => (1.0, hue / 60.0, 0.0),
+                1 => (1.0 - (hue - 60.0) / 60.0, 1.0, 0.0),
+                2 => (0.0, 1.0, (hue - 120.0) / 60.0),
+                3 => (0.0, 1.0 - (hue - 180.0) / 60.0, 1.0),
+                4 => ((hue - 240.0) / 60.0, 0.0, 1.0),
+                _ => (1.0, 0.0, 1.0 - (hue - 300.0) / 60.0),
+            };
+
+            let mut spr = Sprite::new(TextureHandle(0));
+            let cr: f32 = cr;
+            let cg: f32 = cg;
+            let cb: f32 = cb;
+            spr.color = Color::rgb(cr.clamp(0.0, 1.0), cg.clamp(0.0, 1.0), cb.clamp(0.0, 1.0));
+            spr.custom_size = Some(Vec2::new(r * 2.0, r * 2.0));
+
+            commands.spawn((
+                FallingItem,
+                pb,
+                spr,
+                Transform::from_position(Vec3::new(x, -260.0, 0.1)),
+            ));
+        }
+    }
+
+    fn tap_to_catch(
+        input: Res<InputSystem>,
+        cam: Res<Camera2d>,
+        mut st: ResMut<CatchState>,
+        _physics: ResMut<PhysicsWorld>,
+        q: Query<(Entity, &FallingItem, &PhysicsBody, &Transform)>,
+        mut commands: Commands,
+    ) {
+        if !input.mouse.just_pressed(MouseButton::Left) { return; }
+        let mpos = Vec2::new(input.mouse.position().x, input.mouse.position().y);
+        let wpos = cam.screen_to_world(mpos);
+
+        let tap_radius = 40.0;
+        let mut closest: Option<(Entity, f32)> = None;
+        for (entity, _, _pb, tf) in q.iter() {
+            let pos = Vec2::new(tf.position.x, tf.position.y);
+            let dist = (pos - wpos).length();
+            if dist < tap_radius {
+                if closest.is_none() || dist < closest.unwrap().1 {
+                    closest = Some((entity, dist));
+                }
+            }
+        }
+
+        if let Some((entity, _)) = closest {
+            commands.despawn(entity);
+            st.score += 1;
+        }
+    }
+
+    fn remove_offscreen(
+        q: Query<(Entity, &FallingItem, &Transform)>,
+        mut commands: Commands,
+    ) {
+        for (entity, _, tf) in q.iter() {
+            if tf.position.y > 280.0 {
+                commands.despawn(entity);
+            }
+        }
+    }
+
+    fn ui_overlay(st: Res<CatchState>, mut tb: ResMut<ScreenTextBuffer>) {
+        tb.draw(
+            format!("Score: {}", st.score),
+            Vec2::new(10.0, 10.0), 20.0,
+            Color::rgb(1.0, 1.0, 1.0),
+        );
+        tb.draw(
+            "Tap to catch!",
+            Vec2::new(10.0, 35.0), 12.0,
+            Color::rgb(0.6, 0.6, 0.7),
+        );
+    }
+
+    let app = Box::leak(Box::new(App::new()));
+    app.add_plugin(DefaultPlugins);
+    app.add_plugin(Physics2dPlugin);
+    app.build_plugins();
+
+    {
+        let physics = app.world.get_resource_mut::<PhysicsWorld>();
+        physics.config.gravity = Vec2::new(0.0, 200.0);
+    }
+
+    app.add_startup_system(setup);
+    app.add_startup_system(setup_walls);
+    app.add_system(spawn_falling);
+    app.add_system(tap_to_catch);
+    app.add_system(remove_offscreen);
+    app.add_system(ui_overlay);
+
+    let mut runner = WasmRunner::with_canvas_id(canvas_id);
+    runner.run(&mut app.world, &mut app.schedule);
+}
+
+#[cfg(not(all(target_arch = "wasm32", feature = "wasm")))]
+pub fn run_catch(_canvas_id: &str) {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
