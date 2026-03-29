@@ -105,7 +105,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 </head>
 <body>
 <div id="ad-container">
-<canvas id="arachne-canvas" width="320" height="480"></canvas>
+<canvas id="arachne-canvas" width="480" height="720"></canvas>
 </div>
 HTMLEOF
 
@@ -147,7 +147,7 @@ B64FUNC
     printf 'const ad = new ArachnePlayable({\n'
     printf '  container: '"'"'#ad-container'"'"',\n'
     printf '  canvasId: '"'"'arachne-canvas'"'"',\n'
-    printf '  width: 320, height: 480,\n'
+    printf '  width: 480, height: 720,\n'
     printf '  storeUrl: '"'"'https://apps.apple.com/example'"'"',\n'
     printf '  ctaText: '"'"'%s'"'"',\n' "$CTA_TEXT"
     printf '  endCardDelay: %d,\n' "$END_DELAY"

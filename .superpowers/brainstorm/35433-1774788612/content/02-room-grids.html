@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Eren's World — Room Tile Grids</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 24px; }
+  .rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1100px; }
+  .room { background: #161b22; border-radius: 8px; padding: 16px; border: 1px solid #30363d; }
+  .room-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .room-name { font-weight: 600; font-size: 15px; }
+  .room-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .room-desc { color: #8b949e; font-size: 12px; margin-bottom: 12px; line-height: 1.4; }
+  .grid-wrap { display: flex; justify-content: center; }
+  .grid { display: inline-grid; grid-template-columns: repeat(20, 22px); grid-template-rows: repeat(15, 22px); gap: 1px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 1px; }
+  .t { border-radius: 2px; position: relative; }
+  .t-door::after { content: ''; position: absolute; inset: 6px; background: #daa520; border-radius: 50%; }
+  .t-interact { outline: 2px solid #ff0; outline-offset: -2px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{outline-color:#ff0} 50%{outline-color:rgba(255,255,0,0.4)} }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; padding: 16px; background: #161b22; border-radius: 8px; border: 1px solid #30363d; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8b949e; }
+  .legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #30363d; }
+  .connections { background: #161b22; border-radius: 8px; padding: 16px; border: 1px solid #30363d; margin-top: 24px; max-width: 1100px; }
+  .connections h3 { margin-bottom: 12px; font-size: 15px; }
+  .conn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .conn-table th { text-align: left; color: #8b949e; padding: 6px 8px; border-bottom: 1px solid #30363d; }
+  .conn-table td { padding: 6px 8px; border-bottom: 1px solid #21262d; }
+  .interactable-list { margin-top: 8px; text-align: center; font-size: 11px; color: #ffdd00; }
+  @media (max-width: 900px) { .rooms { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>Room Tile Grids — Visual Preview</h1>
+<p class="subtitle">All 8 rooms at 20x15. Yellow outlines = interactable (press E). Hover tiles for coordinates.</p>
+
+<div class="legend" id="legend"></div>
+<div class="rooms" id="rooms"></div>
+<div class="connections">
+  <h3>Door Connections and Spawn Points</h3>
+  <table class="conn-table">
+    <tr><th>From</th><th>Door Position</th><th>To</th><th>Spawn At</th></tr>
+    <tr><td>0. Welcome</td><td>any key</td><td>1. Nexus</td><td>(10, 7)</td></tr>
+    <tr><td>1. Nexus N</td><td>(10, 0)</td><td>2. Foundry</td><td>(10, 13)</td></tr>
+    <tr><td>1. Nexus W</td><td>(0, 7)</td><td>3. AttoCode Lab</td><td>(18, 7)</td></tr>
+    <tr><td>1. Nexus E</td><td>(19, 7)</td><td>4. Vision Deck</td><td>(1, 7)</td></tr>
+    <tr><td>1. Nexus S</td><td>(10, 14)</td><td>5. Archive</td><td>(10, 1)</td></tr>
+    <tr><td>2. Foundry S</td><td>(10, 14)</td><td>1. Nexus</td><td>(10, 1)</td></tr>
+    <tr><td>3. Lab E</td><td>(19, 7)</td><td>1. Nexus</td><td>(1, 7)</td></tr>
+    <tr><td>4. Vision W</td><td>(0, 7)</td><td>1. Nexus</td><td>(18, 7)</td></tr>
+    <tr><td>5. Archive N</td><td>(10, 0)</td><td>1. Nexus</td><td>(10, 13)</td></tr>
+    <tr><td>5. Archive S</td><td>(10, 14)</td><td>6. About Eren</td><td>(10, 1)</td></tr>
+    <tr><td>6. About N</td><td>(10, 0)</td><td>5. Archive</td><td>(10, 13)</td></tr>
+    <tr><td>6. About S</td><td>(10, 14) hidden</td><td>7. The Void</td><td>(10, 1)</td></tr>
+    <tr><td>7. Void N</td><td>(10, 0)</td><td>6. About Eren</td><td>(10, 13)</td></tr>
+  </table>
+  <p style="color:#f0883e;font-size:12px;margin-top:12px">Hidden door in Room 6 south wall appears after collecting all 8 silk threads.</p>
+</div>
+
+<script>
+const TC = {
+  0:'#0d1117',1:'#4a8c3f',2:'#8b6b3e',3:'#808080',4:'#3a8fd4',5:'#b8860b',
+  6:'#5a3a1a',7:'#8b4513',8:'#2d5a27',9:'#c4a87c',10:'#505050',11:'#1a3a6b',
+  12:'#d4a76a',13:'#708090',14:'#5a6e3f',15:'#deb887',16:'#f0f8ff',17:'#b0e0e6',
+  18:'#ff4500',19:'#696969',20:'#a0a0a0',21:'#a0522d',22:'#f0ece0',23:'#3e2723',
+  24:'#ff0000',25:'#00ff00',26:'#0055ff',27:'#ffdd00',28:'#ff00ff',29:'#00e5ff',
+  30:'#c0c0c0',31:'#404040'
+};
+const TN = {
+  0:'Empty',1:'Grass',2:'Dirt',3:'Stone Wall',4:'Water',5:'Wood Floor',6:'Door',
+  7:'Brick',8:'Dark Grass',9:'Light Dirt',10:'Dark Stone',11:'Deep Water',12:'Light Wood',
+  13:'Metal Door',14:'Mossy Brick',15:'Sand',16:'Snow',17:'Ice',18:'Lava',19:'Cobblestone',
+  20:'Gravel',21:'Planks',22:'Marble',23:'Dark Brick',24:'Red',25:'Green',26:'Blue',
+  27:'Yellow',28:'Magenta',29:'Cyan',30:'Light Gray',31:'Dark Gray'
+};
+
+const rooms = [
+  { name:"0. Welcome Screen", tag:"Title", tagColor:"#ffd93d",
+    desc:"Spider web on void. Title text overlay. Press any key to begin.",
+    interact:[],
+    grid:[[0,0,0,31,0,0,0,0,0,31,0,0,0,0,0,0,31,0,0,0],[0,0,0,0,31,0,0,0,0,31,0,0,0,0,0,31,0,0,0,0],[0,0,0,0,0,31,0,0,0,31,0,0,0,0,31,0,0,0,0,0],[0,0,0,0,0,0,31,0,0,31,0,0,0,31,0,0,0,0,0,0],[0,0,0,0,0,0,0,31,0,31,0,0,31,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,31,31,0,31,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,31,31,0,0,0,0,0,0,0,0,0],[31,31,31,31,31,31,31,31,31,24,24,31,31,31,31,31,31,31,31,31],[0,0,0,0,0,0,0,0,0,31,31,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,31,31,0,31,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,31,0,31,0,0,31,0,0,0,0,0,0,0],[0,0,0,0,0,0,31,0,0,31,0,0,0,31,0,0,0,0,0,0],[0,0,0,0,0,31,0,0,0,31,0,0,0,0,31,0,0,0,0,0],[0,0,0,0,31,0,0,0,0,31,0,0,0,0,0,31,0,0,0,0],[0,0,0,31,0,0,0,0,0,31,0,0,0,0,0,0,31,0,0,0]]
+  },
+  { name:"1. The Nexus", tag:"Hub", tagColor:"#ffd93d",
+    desc:"Central hub. Cobblestone + gravel web. Red center node. 4 doors (N/S/E/W).",
+    interact:[{c:9,r:7,l:"Web Center"},{c:10,r:7,l:"Web Center"}],
+    grid:[[3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,3,3],[3,19,19,20,19,19,19,19,19,20,20,20,19,19,19,19,20,19,19,3],[3,19,19,19,20,19,19,19,19,20,20,19,19,19,19,20,19,19,19,3],[3,19,19,19,19,20,19,19,19,20,20,19,19,19,20,19,19,19,19,3],[3,19,19,19,19,19,20,19,19,20,20,19,19,20,19,19,19,19,19,3],[3,19,19,19,19,19,19,20,19,20,20,19,20,19,19,19,19,19,19,3],[3,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,3],[6,20,20,20,20,20,20,20,20,24,24,20,20,20,20,20,20,20,20,6],[3,19,19,19,19,19,19,19,20,20,20,20,19,19,19,19,19,19,19,3],[3,19,19,19,19,19,19,20,19,20,20,19,20,19,19,19,19,19,19,3],[3,19,19,19,19,19,20,19,19,20,20,19,19,20,19,19,19,19,19,3],[3,19,19,19,19,20,19,19,19,20,20,19,19,19,20,19,19,19,19,3],[3,19,19,19,20,19,19,19,19,20,20,19,19,19,19,20,19,19,19,3],[3,19,19,20,19,19,19,19,19,20,20,19,19,19,19,19,20,19,19,3],[3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,3,3]]
+  },
+  { name:"2. The Foundry", tag:"North", tagColor:"#ff6b6b",
+    desc:"Systems programming. Lava river + stone bridge. Arachne (cyan), Synapse (yellow), sqld (red monument).",
+    interact:[{c:3,r:3,l:"Arachne"},{c:16,r:3,l:"Synapse"},{c:9,r:12,l:"sqld"},{c:10,r:12,l:"sqld"}],
+    grid:[[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],[10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10],[10,5,23,23,23,5,5,5,5,5,5,5,5,5,5,23,23,23,5,10],[10,5,23,29,23,5,5,5,5,5,5,5,5,5,5,23,27,23,5,10],[10,5,23,23,23,5,5,5,5,5,5,5,5,5,5,23,23,23,5,10],[10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10],[10,18,18,18,18,18,18,18,18,5,5,18,18,18,18,18,18,18,18,10],[10,18,18,18,18,18,18,18,18,5,5,18,18,18,18,18,18,18,18,10],[10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10],[10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10],[10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10],[10,5,5,5,5,5,5,23,23,23,23,23,23,5,5,5,5,5,5,10],[10,5,5,5,5,5,5,23,24,31,31,24,23,5,5,5,5,5,5,10],[10,5,5,5,5,5,5,23,23,23,23,23,23,5,5,5,5,5,5,10],[10,10,10,10,10,10,10,10,10,10,6,10,10,10,10,10,10,10,10,10]]
+  },
+  { name:"3. AttoCode Lab", tag:"West", tagColor:"#4ecdc4",
+    desc:"AI agent command center. Planks, server racks (metal+cyan). AttoCode, Spider Chat, Vyx, Swarm.",
+    interact:[{c:5,r:6,l:"AttoCode Core"},{c:14,r:6,l:"Spider Chat"},{c:3,r:12,l:"Vyx Language"},{c:16,r:12,l:"Swarm Terminal"}],
+    grid:[[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,13,29,13,21,13,29,13,21,21,13,29,13,21,13,29,13,21,3],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,21,21,3,3,3,21,21,21,21,21,21,3,3,3,21,21,21,3],[3,21,21,21,3,31,3,21,21,21,21,21,21,3,29,3,21,21,21,3],[3,21,21,21,3,3,3,21,21,21,21,21,21,3,3,3,21,21,21,6],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,3],[3,21,3,3,3,21,21,21,21,21,21,21,21,21,21,3,3,3,21,3],[3,21,3,28,3,21,21,21,21,21,21,21,21,21,21,3,27,3,21,3],[3,21,3,3,3,21,21,21,21,21,21,21,21,21,21,3,3,3,21,3],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]]
+  },
+  { name:"4. Vision Deck", tag:"East", tagColor:"#95e1d3",
+    desc:"Visual AI + browser automation. Marble floor, ice crystal center. Visionbot, SAM-CLIP, geo_spy, neo-unify.",
+    interact:[{c:3,r:3,l:"Visionbot"},{c:16,r:3,l:"SAM-CLIP-Diff"},{c:3,r:12,l:"open_geo_spy"},{c:16,r:12,l:"neo-unify"}],
+    grid:[[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],[3,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,3],[3,22,3,3,3,22,22,22,22,22,22,22,22,22,22,3,3,3,22,3],[3,22,3,26,3,22,22,22,22,22,22,22,22,22,22,3,29,3,22,3],[3,22,3,3,3,22,22,22,22,22,22,22,22,22,22,3,3,3,22,3],[3,22,22,22,22,22,22,22,17,17,17,17,22,22,22,22,22,22,22,3],[3,22,22,22,22,22,22,17,17,17,17,17,17,22,22,22,22,22,22,3],[6,22,22,22,22,22,17,17,17,29,29,17,17,17,22,22,22,22,22,3],[3,22,22,22,22,22,22,17,17,17,17,17,17,22,22,22,22,22,22,3],[3,22,22,22,22,22,22,22,17,17,17,17,22,22,22,22,22,22,22,3],[3,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,3],[3,22,3,3,3,22,22,22,22,22,22,22,22,22,22,3,3,3,22,3],[3,22,3,25,3,22,22,22,22,22,22,22,22,22,22,3,28,3,22,3],[3,22,3,3,3,22,22,22,22,22,22,22,22,22,22,3,3,3,22,3],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]]
+  },
+  { name:"5. The Archive", tag:"South", tagColor:"#c084fc",
+    desc:"Museum of projects. Dark grass, deep water pools, mossy brick exhibits. Central grass path.",
+    interact:[{c:3,r:3,l:"Crucible"},{c:16,r:3,l:"Antelligence"},{c:3,r:10,l:"Misc Projects"},{c:16,r:10,l:"More Projects"},{c:9,r:12,l:"Central Archive"},{c:10,r:12,l:"Central Archive"}],
+    grid:[[3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,3,3],[3,8,8,8,8,8,8,8,8,1,1,8,8,8,8,8,8,8,8,3],[3,8,14,14,14,8,8,8,8,1,1,8,8,8,8,14,14,14,8,3],[3,8,14,28,14,8,8,8,8,1,1,8,8,8,8,14,27,14,8,3],[3,8,14,14,14,8,8,8,8,1,1,8,8,8,8,14,14,14,8,3],[3,8,8,8,8,8,8,8,8,1,1,8,8,8,8,8,8,8,8,3],[3,11,11,11,11,11,8,8,8,1,1,8,8,8,11,11,11,11,11,3],[3,8,8,8,8,8,8,8,8,1,1,8,8,8,8,8,8,8,8,3],[3,8,8,8,8,8,8,8,8,1,1,8,8,8,8,8,8,8,8,3],[3,8,14,14,14,8,8,8,8,1,1,8,8,8,8,14,14,14,8,3],[3,8,14,24,14,8,8,8,8,1,1,8,8,8,8,14,25,14,8,3],[3,8,14,14,14,8,8,8,14,14,14,14,8,8,8,14,14,14,8,3],[3,8,8,8,8,8,8,8,14,29,29,14,8,8,8,8,8,8,8,3],[3,8,8,8,8,8,8,8,14,14,14,14,8,8,8,8,8,8,8,3],[3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,3,3]]
+  },
+  { name:"6. About Eren", tag:"Personal", tagColor:"#f97316",
+    desc:"Cozy personal room. Sand floor, desk, garden, bookshelf, terminal. Hidden south door (8 silk).",
+    interact:[{c:3,r:3,l:"Desk (Bio)"},{c:16,r:3,l:"Garden"},{c:3,r:11,l:"Bookshelf"},{c:16,r:11,l:"Terminal (GitHub)"}],
+    grid:[[3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,3,3],[3,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3],[3,15,5,5,5,5,15,15,15,15,15,15,15,15,1,1,1,1,15,3],[3,15,5,23,31,5,15,15,15,15,15,15,15,15,1,8,4,1,15,3],[3,15,5,5,5,5,15,15,15,15,15,15,15,15,1,1,1,1,15,3],[3,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3],[3,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3],[3,15,15,15,15,15,15,9,9,9,9,9,9,15,15,15,15,15,15,3],[3,15,15,15,15,15,15,9,15,15,15,15,9,15,15,15,15,15,15,3],[3,15,15,15,15,15,15,9,9,9,9,9,9,15,15,15,15,15,15,3],[3,15,7,7,7,15,15,15,15,15,15,15,15,15,15,5,5,5,15,3],[3,15,7,23,7,15,15,15,15,15,15,15,15,15,15,5,29,5,15,3],[3,15,7,7,7,15,15,15,15,15,15,15,15,15,15,5,5,5,15,3],[3,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]]
+  },
+  { name:"7. The Void", tag:"Secret", tagColor:"#ef4444",
+    desc:"Lava border on void. Central red structure. Meta-commentary: the game IS the portfolio.",
+    interact:[{c:9,r:7,l:"The Core"},{c:10,r:7,l:"The Core"}],
+    grid:[[0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0],[0,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,24,24,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,24,24,24,24,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,24,24,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0],[0,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+  }
+];
+
+function renderAll() {
+  // Legend
+  const usedTiles = new Set();
+  rooms.forEach(function(r) { r.grid.forEach(function(row) { row.forEach(function(t) { usedTiles.add(t); }); }); });
+  const legendEl = document.getElementById('legend');
+  const sortedTiles = Array.from(usedTiles).sort(function(a,b){return a-b;});
+  sortedTiles.forEach(function(t) {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    const swatch = document.createElement('div');
+    swatch.className = 'legend-swatch';
+    swatch.style.background = TC[t];
+    item.appendChild(swatch);
+    const label = document.createElement('span');
+    label.textContent = t + ': ' + TN[t];
+    item.appendChild(label);
+    legendEl.appendChild(item);
+  });
+
+  // Rooms
+  var roomsEl = document.getElementById('rooms');
+  rooms.forEach(function(room) {
+    var div = document.createElement('div');
+    div.className = 'room';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'room-header';
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'room-name';
+    nameSpan.textContent = room.name;
+    var tagSpan = document.createElement('span');
+    tagSpan.className = 'room-tag';
+    tagSpan.style.background = room.tagColor + '22';
+    tagSpan.style.color = room.tagColor;
+    tagSpan.style.border = '1px solid ' + room.tagColor + '44';
+    tagSpan.textContent = room.tag;
+    header.appendChild(nameSpan);
+    header.appendChild(tagSpan);
+    div.appendChild(header);
+
+    // Description
+    var desc = document.createElement('p');
+    desc.className = 'room-desc';
+    desc.textContent = room.desc;
+    div.appendChild(desc);
+
+    // Build interact lookup
+    var interactSet = {};
+    (room.interact || []).forEach(function(i) { interactSet[i.c + ',' + i.r] = i.l; });
+
+    // Grid
+    var gridWrap = document.createElement('div');
+    gridWrap.className = 'grid-wrap';
+    var grid = document.createElement('div');
+    grid.className = 'grid';
+
+    room.grid.forEach(function(row, r) {
+      row.forEach(function(t, c) {
+        var cell = document.createElement('div');
+        var cls = 't';
+        if (t === 6) cls += ' t-door';
+        if (interactSet[c + ',' + r]) cls += ' t-interact';
+        cell.className = cls;
+        cell.style.background = TC[t];
+        cell.title = '(' + c + ',' + r + ') ' + TN[t] + (interactSet[c+','+r] ? ' [' + interactSet[c+','+r] + ']' : '');
+        grid.appendChild(cell);
+      });
+    });
+
+    gridWrap.appendChild(grid);
+    div.appendChild(gridWrap);
+
+    // Interactable labels
+    if (room.interact && room.interact.length > 0) {
+      var labels = [];
+      var seen = {};
+      room.interact.forEach(function(i) {
+        if (!seen[i.l]) { labels.push(i.l); seen[i.l] = true; }
+      });
+      var labelsDiv = document.createElement('div');
+      labelsDiv.className = 'interactable-list';
+      labelsDiv.textContent = labels.join(' | ');
+      div.appendChild(labelsDiv);
+    }
+
+    roomsEl.appendChild(div);
+  });
+}
+
+renderAll();
+</script>
+</body>
+</html>

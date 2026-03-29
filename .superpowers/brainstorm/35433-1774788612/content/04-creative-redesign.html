@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Eren's World — Creative Redesign</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  h2 { font-size: 18px; margin: 32px 0 12px; color: #58a6ff; }
+  h3 { font-size: 15px; margin: 16px 0 8px; }
+  .sub { color: #8b949e; font-size: 14px; margin-bottom: 24px; }
+  .card { background: #161b22; border-radius: 8px; padding: 16px; border: 1px solid #30363d; margin: 12px 0; }
+  .card-accent { border-left: 3px solid; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-right: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .sprite-card { background: #1e1e2e; border-radius: 8px; padding: 12px; text-align: center; }
+  .sprite-card .preview { width: 64px; height: 64px; margin: 8px auto; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .sprite-card .name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .sprite-card .desc { font-size: 11px; color: #8b949e; }
+  .ref { background: #1e1e2e; border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; margin: 8px 0; }
+  .ref-img { width: 60px; height: 60px; background: #30363d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8b949e; }
+  .ref-text { flex: 1; }
+  .ref-text .title { font-weight: 600; font-size: 13px; }
+  .ref-text .detail { font-size: 12px; color: #8b949e; margin-top: 2px; }
+  .dialogue-box { background: #1a1a2e; border: 2px solid #4a4a6a; border-radius: 8px; padding: 12px 16px; margin: 8px 0; position: relative; }
+  .dialogue-box .speaker { font-size: 11px; color: #ffd93d; font-weight: 600; margin-bottom: 4px; }
+  .dialogue-box .text { font-size: 13px; color: #e0e0e0; line-height: 1.5; }
+  .dialogue-box::after { content: 'E'; position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: #666; background: #2a2a4a; padding: 1px 6px; border-radius: 4px; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; font-size: 13px; color: #ccc; line-height: 1.5; }
+  .highlight { color: #ffd93d; }
+  .red { color: #ff6b6b; }
+  .cyan { color: #4ecdc4; }
+  .green { color: #95e1d3; }
+  .purple { color: #c084fc; }
+  .orange { color: #f97316; }
+  code { background: #21262d; padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Eren's World — Creative Redesign</h1>
+<p class="sub">Research-backed, sprite-capable, narrative-driven. Not a museum — a game.</p>
+
+<!-- ===== RESEARCH ===== -->
+<h2>What Works in Portfolio Games (Research)</h2>
+
+<div class="ref">
+  <div class="ref-img">Side-scroll</div>
+  <div class="ref-text">
+    <div class="title">Robby Leonardi — Interactive Resume</div>
+    <div class="detail">Mario-style side-scroller. Scroll through career as platformer levels. Won FWA, Awwwards, CSS Design Awards. Key lesson: <b>the format IS the portfolio piece</b>.</div>
+  </div>
+</div>
+<div class="ref">
+  <div class="ref-img">3D Drive</div>
+  <div class="ref-text">
+    <div class="title">Bruno Simon — Three.js Car World</div>
+    <div class="detail">Drive a car through 3D portfolio. Open source, Blender files included. Key lesson: <b>playful interaction > information density</b>. Visitors spend 5+ minutes.</div>
+  </div>
+</div>
+<div class="ref">
+  <div class="ref-img">2D RPG</div>
+  <div class="ref-text">
+    <div class="title">JSLegendDev — 2D Portfolio Kaboom</div>
+    <div class="detail">Walk around pixel art rooms, talk to NPCs. Tiled maps, dialogue boxes. Key lesson: <b>NPC dialogue with character portraits makes info memorable</b>.</div>
+  </div>
+</div>
+<div class="ref">
+  <div class="ref-img">RPG</div>
+  <div class="ref-text">
+    <div class="title">atilio-ts — RPG 2D Portfolio</div>
+    <div class="detail">Full RPG-style interactive website. Walk around, interact with objects, read certificates. Key lesson: <b>environmental objects (not terminals) make rooms feel alive</b>.</div>
+  </div>
+</div>
+
+<div class="card" style="border-left: 3px solid #ffd93d;">
+  <h3 class="highlight">What Eren's World Has That They Don't</h3>
+  <ul>
+    <li><b>The meta-flex:</b> The game runs on an engine Eren built. No other portfolio game can say that. This needs to be FELT, not just stated.</li>
+    <li><b>A real story:</b> Not just "here are my projects" but a journey from Python to Rust, from tutorials to swarms, from building tools to building engines.</li>
+    <li><b>Sub-1MB runtime:</b> The entire game + engine weighs less than most hero images. That's the punchline.</li>
+  </ul>
+</div>
+
+<!-- ===== ENGINE UNLOCK ===== -->
+<h2>Engine Unlock: Custom Sprites via Embedded PNG</h2>
+
+<div class="card">
+  <p style="font-size:13px;color:#ccc;line-height:1.6;">
+    The engine has <code>load_png_bytes()</code> — documented as <i>"Useful for WASM where textures are fetched as byte arrays."</i>
+    We can embed pixel art PNGs as <code>const</code> byte arrays in Rust, load them at startup, and use them as sprite textures.
+    <br><br>
+    <b>Size impact:</b> A 32x32 pixel art PNG = ~200-500 bytes. Even 30 sprites = ~10-15KB. The WASM binary is 389KB — this adds ~3% and unlocks a completely different visual quality.
+    <br><br>
+    <span class="highlight">This means: actual character sprites, environmental objects, NPC portraits, UI elements — not just colored rectangles.</span>
+  </p>
+</div>
+
+<!-- ===== SPRITE WISHLIST ===== -->
+<h2>Sprite Wishlist (Nano Banana Pro Generation)</h2>
+<p class="sub">16x16 or 32x32 pixel art, top-down RPG style. Consistent palette. Generate in themed batches.</p>
+
+<h3>Batch 1: Characters</h3>
+<div class="grid3">
+  <div class="sprite-card">
+    <div class="preview" style="background:#2d5a27;">&#129489;</div>
+    <div class="name">Eren (Player)</div>
+    <div class="desc">32x32, top-down, dark hair, hoodie. 4 directional variants (N/S/E/W) or single facing-down.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#3e2723;">&#128375;</div>
+    <div class="name">Arachne (Spider)</div>
+    <div class="desc">16x16, cute spider companion. Red/dark body, 8 legs. Friendly, not scary. Maybe small eyes.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#1a3a6b;">&#129302;</div>
+    <div class="name">Agent Bot (NPC)</div>
+    <div class="desc">16x16, small robot/AI agent. For The Hive room. Cyan glow. Multiple color variants.</div>
+  </div>
+</div>
+
+<h3>Batch 2: Furniture &amp; Objects</h3>
+<div class="grid3">
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#128187;</div>
+    <div class="name">Computer Terminal</div>
+    <div class="desc">16x16, pixel CRT monitor with green/cyan screen glow. For project interactables.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#128218;</div>
+    <div class="name">Bookshelf</div>
+    <div class="desc">16x16, wooden bookshelf with colored book spines. For Archive and About rooms.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#9881;</div>
+    <div class="name">Anvil / Forge</div>
+    <div class="desc">16x16, blacksmith anvil. For The Forge room. Dark metal.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#128301;</div>
+    <div class="name">Server Rack</div>
+    <div class="desc">16x16, server tower with blinking lights. For AttoCode Lab.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#127793;</div>
+    <div class="name">Potted Plant</div>
+    <div class="desc">16x16, small plant decoration. Adds life to rooms.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#128270;</div>
+    <div class="name">Magnifying Glass</div>
+    <div class="desc">16x16, for The Lens / Vision Deck. Represents computer vision.</div>
+  </div>
+</div>
+
+<h3>Batch 3: Project Symbols</h3>
+<div class="grid3">
+  <div class="sprite-card">
+    <div class="preview" style="background:#3e2723;">&#128376;</div>
+    <div class="name">Spider Web</div>
+    <div class="desc">32x32, web pattern. For Nexus center and web motifs. Overlay sprite.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#9889;</div>
+    <div class="name">Synapse Brain</div>
+    <div class="desc">16x16, brain/neural icon. Glowing. For Synapse interactable.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#505050;">&#127760;</div>
+    <div class="name">Globe</div>
+    <div class="desc">16x16, small earth globe. For open_geo_spy.</div>
+  </div>
+</div>
+
+<h3>Batch 4: UI Elements</h3>
+<div class="grid3">
+  <div class="sprite-card">
+    <div class="preview" style="background:#1a1a2e;border:2px solid #4a4a6a;border-radius:4px;font-size:14px;color:#666;">Dialog</div>
+    <div class="name">Dialogue Box Frame</div>
+    <div class="desc">9-slice border texture. Dark blue/purple. RPG-style text box with rounded corners.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#1a1a2e;">&#128313;</div>
+    <div class="name">Silk Thread</div>
+    <div class="desc">8x8, golden thread collectible. Glowing. For the 8 silk thread collectibles.</div>
+  </div>
+  <div class="sprite-card">
+    <div class="preview" style="background:#1a1a2e;">&#10145;</div>
+    <div class="name">Arrow Indicator</div>
+    <div class="desc">8x8, small arrow pointing to doors/interactables. Subtle guidance.</div>
+  </div>
+</div>
+
+<!-- ===== REVISED GAME DESIGN ===== -->
+<h2>Revised Design: What Changes</h2>
+
+<div class="card card-accent" style="border-color: #ffd93d;">
+  <h3 class="highlight">1. Dialogue System Overhaul</h3>
+  <p style="font-size:13px;color:#ccc;margin-bottom:12px;">RPG-style dialogue box at bottom of screen with speaker name + portrait. Not just floating text.</p>
+  <div class="dialogue-box">
+    <div class="speaker">Arachne</div>
+    <div class="text">You found the web. Good. Most people just scroll past. Let me show you what Eren built.</div>
+  </div>
+  <div class="dialogue-box">
+    <div class="speaker">Terminal: Arachne Engine</div>
+    <div class="text">389 kilobytes. The engine running this game. Most hero images on the web weigh more than that.</div>
+  </div>
+  <div class="dialogue-box">
+    <div class="speaker">Eren's Desk</div>
+    <div class="text">M.Sc. Intelligent Systems. Berlin. Mass producer of open source. Talks to machines for a living.</div>
+  </div>
+</div>
+
+<div class="card card-accent" style="border-color: #ff6b6b;">
+  <h3 class="red">2. Environmental Objects, Not Terminals</h3>
+  <p style="font-size:13px;color:#ccc;">Instead of "walk to colored square, press E", you walk to actual pixel art objects:</p>
+  <ul>
+    <li><b>The Forge:</b> An anvil sprite for Arachne, a glowing furnace sprite for Synapse, a stone monument sprite for sqld</li>
+    <li><b>The Hive:</b> Server rack sprites with blinking lights, terminal sprites with scrolling text effect, small robot sprites drifting around</li>
+    <li><b>The Lens:</b> A magnifying glass on a table, a globe, monitor sprites showing "vision" patterns</li>
+    <li><b>The Lab:</b> Bookshelves, bubbling flask sprites, scattered note sprites</li>
+    <li><b>Eren's Room:</b> Desk with computer, bookshelf, potted plant, window showing pixel Berlin skyline</li>
+  </ul>
+</div>
+
+<div class="card card-accent" style="border-color: #4ecdc4;">
+  <h3 class="cyan">3. Spider Companion With Personality</h3>
+  <p style="font-size:13px;color:#ccc;">Arachne isn't decoration — she's the narrator. With an actual spider sprite, she becomes a character:</p>
+  <div class="dialogue-box">
+    <div class="speaker">Arachne (entering The Forge)</div>
+    <div class="text">Careful here. This is where Eren decided colored rectangles weren't enough. So he built an engine.</div>
+  </div>
+  <div class="dialogue-box">
+    <div class="speaker">Arachne (entering The Hive)</div>
+    <div class="text">The agents in here built a database. Autonomously. 26,500 lines. Eren just watched. Terrifying, honestly.</div>
+  </div>
+  <div class="dialogue-box">
+    <div class="speaker">Arachne (entering Eren's Room)</div>
+    <div class="text">He doesn't sleep enough. Don't tell him I said that.</div>
+  </div>
+</div>
+
+<div class="card card-accent" style="border-color: #c084fc;">
+  <h3 class="purple">4. Dynamic Room Moments</h3>
+  <ul>
+    <li><b>The Hive:</b> 3-5 small bot sprites drift around the room autonomously (simple sine-wave movement). Visual representation of the swarm.</li>
+    <li><b>The Forge:</b> Lava tiles "pulse" (swap between lava/orange tiles on a timer). Feels alive.</li>
+    <li><b>The Void:</b> After reading the final dialogue, web strands (dark gray tiles) fill the void — the web is complete. Tiles literally change.</li>
+    <li><b>Nexus:</b> Each time you clear a room, a small sprite appears on that room's web strand — visual progress.</li>
+  </ul>
+</div>
+
+<div class="card card-accent" style="border-color: #f97316;">
+  <h3 class="orange">5. Proper Welcome Experience</h3>
+  <p style="font-size:13px;color:#ccc;line-height:1.6;">
+    Not just a title card. The welcome screen is a <b>cold open</b>:<br><br>
+    Black screen. Pause. Then text fades in character by character (typewriter):<br>
+    <code style="color:#ff6b6b;">"389 kilobytes."</code><br>
+    Pause.<br>
+    <code style="color:#ff6b6b;">"That's all this needs."</code><br>
+    Pause.<br>
+    <code style="color:#ff6b6b;">"Press any key to enter the web."</code><br><br>
+    Spider web tiles materialize from center outward. Then the Nexus loads. First impression = mystery + flex.
+  </p>
+</div>
+
+<!-- ===== REVISED ROOM SUMMARY ===== -->
+<h2>Revised Room Summary</h2>
+
+<div class="card">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="border-bottom:1px solid #30363d;">
+      <th style="text-align:left;padding:8px;color:#8b949e;">Room</th>
+      <th style="text-align:left;padding:8px;color:#8b949e;">Story Beat</th>
+      <th style="text-align:left;padding:8px;color:#8b949e;">Custom Sprites</th>
+      <th style="text-align:left;padding:8px;color:#8b949e;">Wow Moment</th>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#ffd93d;">Welcome</td>
+      <td style="padding:8px;">Cold open. Typewriter text. Web materializes.</td>
+      <td style="padding:8px;">Spider web</td>
+      <td style="padding:8px;">Text + web animation</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#ffd93d;">Nexus</td>
+      <td style="padding:8px;">Spider greets you. "Let me show you what Eren built."</td>
+      <td style="padding:8px;">Spider web center, progress markers</td>
+      <td style="padding:8px;">Spider companion activates</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#ff6b6b;">The Forge</td>
+      <td style="padding:8px;">"I wanted to understand how things actually work."</td>
+      <td style="padding:8px;">Anvil, furnace, monument</td>
+      <td style="padding:8px;">Pulsing lava + sqld legal story</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#4ecdc4;">The Hive</td>
+      <td style="padding:8px;">"What if the machine could build WITH me?"</td>
+      <td style="padding:8px;">Server racks, terminals, drifting bots</td>
+      <td style="padding:8px;">Autonomous bot sprites moving</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#95e1d3;">The Lens</td>
+      <td style="padding:8px;">"Teaching machines to see."</td>
+      <td style="padding:8px;">Magnifying glass, globe, monitors</td>
+      <td style="padding:8px;">Timeline wall showing progression</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#c084fc;">The Lab</td>
+      <td style="padding:8px;">"Break things on purpose, learn faster."</td>
+      <td style="padding:8px;">Bookshelves, flasks, notes</td>
+      <td style="padding:8px;">Mossy overgrown feel + water</td>
+    </tr>
+    <tr style="border-bottom:1px solid #21262d;">
+      <td style="padding:8px;color:#f97316;">Eren's Room</td>
+      <td style="padding:8px;">"Human, talking to machines."</td>
+      <td style="padding:8px;">Desk, plant, bookshelf, window</td>
+      <td style="padding:8px;">Cozy personal space + hidden trigger</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;color:#ef4444;">The Void</td>
+      <td style="padding:8px;">"You're inside the proof."</td>
+      <td style="padding:8px;">Minimal. Just the core.</td>
+      <td style="padding:8px;">Tiles transform after dialogue</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ===== NEXT STEPS ===== -->
+<h2>Decision Points</h2>
+<div class="card" style="border-left:3px solid #58a6ff;">
+  <ol style="padding-left:20px;font-size:13px;color:#ccc;line-height:1.8;">
+    <li><b>Sprite generation approach:</b> Use Nano Banana Pro to batch-generate pixel art. Top-down 16x16/32x32, consistent RPG style. Eren generates, we embed as byte arrays.</li>
+    <li><b>How many sprites:</b> ~20-30 unique sprites total. 3 characters + 10-15 objects + 5-8 UI/symbols. ~15KB total embedded size.</li>
+    <li><b>Directional player sprite:</b> 4 directions (N/S/E/W) or single forward-facing? 4 directions = more polished but 4x sprites for player.</li>
+    <li><b>Dialogue box style:</b> Full RPG box with 9-slice border + speaker name? Or simpler bottom-bar with text? RPG box is more impressive but needs a border texture.</li>
+    <li><b>Tile grids:</b> Keep the grids I designed (with adjustments) — they work for layout. The sprites go ON TOP of the tile grid as entities. Tiles = floor/walls, sprites = objects/characters.</li>
+  </ol>
+</div>
+
+</body>
+</html>

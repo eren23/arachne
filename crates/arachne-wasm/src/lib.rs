@@ -14,6 +14,7 @@ pub mod fetch;
 pub mod api;
 pub mod bindings;
 pub mod canvas_runtime;
+pub mod eren_game;
 
 // Re-export the high-level JS API types.
 pub use api::{ArachneApp, ArachneAppOptions, AppState};
@@ -377,6 +378,17 @@ pub fn run_catch(canvas_id: &str) {
 
 #[cfg(not(all(target_arch = "wasm32", feature = "wasm")))]
 pub fn run_catch(_canvas_id: &str) {}
+
+/// Eren's World: narrative-driven tile adventure portfolio game.
+/// Entry point for the portfolio website embed.
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn run_eren_game(canvas_id: &str) {
+    eren_game::run(canvas_id);
+}
+
+#[cfg(not(all(target_arch = "wasm32", feature = "wasm")))]
+pub fn run_eren_game(_canvas_id: &str) {}
 
 #[cfg(test)]
 mod tests {
